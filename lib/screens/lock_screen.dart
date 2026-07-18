@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/vault_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/ios_surface.dart';
 
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
@@ -63,24 +64,16 @@ class _LockScreenState extends State<LockScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            center: const Alignment(0, -0.5),
-            radius: 1.5,
-            colors: [
-              AppColors.accent.withOpacity(0.08),
-              AppColors.bg.withOpacity(0),
-            ],
-          ),
-        ),
+      body: IosBackdrop(
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
@@ -251,6 +244,7 @@ class _LockScreenState extends State<LockScreen> {
                       ),
                     ),
                   ],
+                  ),
                 ),
               ),
             ),

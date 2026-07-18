@@ -100,14 +100,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         icon: Icons.security,
         title: '安全审计',
         subtitle: '检查密码强度和重复',
-        onTap: () => _showFeatureNotReady(context, '安全审计'),
+        onTap: () => Navigator.pushNamed(context, '/security_audit'),
       ),
       const SizedBox(height: 24),
       _buildSectionHeader('同步'),
       _buildSettingTile(
         icon: Icons.sync,
         title: '同步设置',
-        subtitle: '配置WebDAV/SFTP同步',
+        subtitle: '配置 WebDAV 私有云同步',
         onTap: () => Navigator.pushNamed(context, '/sync_settings'),
       ),
       _buildSettingTile(
@@ -613,12 +613,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  void _showFeatureNotReady(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature功能开发中')),
     );
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/vault_provider.dart';
@@ -7,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../widgets/entry_list_item.dart';
 import '../widgets/app_logo.dart';
 import '../utils/responsive.dart';
+import '../widgets/ios_surface.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('密匣'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.lock),
+            icon: const Icon(CupertinoIcons.lock),
             onPressed: () {
               context.read<VaultProvider>().lock();
               Navigator.of(context).pushReplacementNamed('/lock');
@@ -47,17 +49,16 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: '锁定',
           ),
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(CupertinoIcons.settings),
             onPressed: () => Navigator.pushNamed(context, '/settings'),
             tooltip: '设置',
           ),
         ],
       ),
-      body: _buildBody(),
+      body: IosBackdrop(child: _buildBody()),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.pushNamed(context, '/add_entry'),
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: AppColors.bg),
+        child: const Icon(CupertinoIcons.add),
       ),
     );
   }
@@ -67,18 +68,20 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Row(
         children: [
           _buildSidebar(),
-          Expanded(child: _buildBody()),
+          Expanded(child: IosBackdrop(child: _buildBody())),
         ],
       ),
     );
   }
 
   Widget _buildSidebar() {
-    return Container(
-      width: 240,
-      color: AppColors.bg2,
-      child: Column(
-        children: [
+    return GlassSurface(
+      padding: EdgeInsets.zero,
+      borderRadius: BorderRadius.zero,
+      child: SizedBox(
+        width: 240,
+        child: Column(
+          children: [
           Container(
             padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
             child: const AppLogo(size: 50, showText: false),
@@ -129,7 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildSidebarItem(Icons.security, '安全审计', onTap: () => Navigator.pushNamed(context, '/security_audit')),
           _buildSidebarItem(Icons.settings, '设置', onTap: () => Navigator.pushNamed(context, '/settings')),
           const SizedBox(height: 16),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -261,11 +265,12 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       },
       decoration: InputDecoration(
-        hintText: '搜索密码条目...',
-        prefixIcon: const Icon(Icons.search, color: AppColors.muted),
+        hintText: '搜索',
+        prefixIcon: const Icon(CupertinoIcons.search, color: AppColors.muted),
         suffixIcon: _searchQuery.isNotEmpty
             ? IconButton(
-                icon: const Icon(Icons.clear, color: AppColors.muted),
+                icon: const Icon(CupertinoIcons.clear_circled_solid,
+                    color: AppColors.muted),
                 onPressed: () {
                   _searchController.clear();
                   setState(() {
@@ -330,9 +335,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: EdgeInsets.all(isDesktop ? 20 : 12),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.rule),
+        color: AppColors.bg2.withOpacity(0.94),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.rule.withOpacity(0.72)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -399,13 +404,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDesktop = Responsive.isDesktop(context);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: EdgeInsets.all(isDesktop ? 16 : 12),
         decoration: BoxDecoration(
-          color: AppColors.bg2,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.rule),
+          color: AppColors.bg2.withOpacity(0.94),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.rule.withOpacity(0.72)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
               height: isDesktop ? 40 : 36,
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: isDesktop ? 22 : 18),
             ),

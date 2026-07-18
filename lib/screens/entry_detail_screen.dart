@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/password_entry.dart';
 import '../models/entry_type_config.dart';
 import '../providers/vault_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
+import '../utils/secure_clipboard.dart';
 
 class EntryDetailScreen extends StatefulWidget {
   final String entryId;
@@ -282,7 +282,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
               if (isSensitive) const SizedBox(width: 4),
               InkWell(
                 onTap: () {
-                  Clipboard.setData(ClipboardData(text: value));
+                  SecureClipboard.copy(value);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('${field.label} 已复制到剪贴板')),
                   );
@@ -383,7 +383,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
                   onPressed: () {
                     final field = _getPrimaryCopyField(entry)!;
                     final value = entry.getField(field.key);
-                    Clipboard.setData(ClipboardData(text: value));
+                    SecureClipboard.copy(value);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('${field.label} 已复制')),
                     );
@@ -400,7 +400,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
                   onPressed: () {
                     final field = _getSensitiveField(entry)!;
                     final value = entry.getField(field.key);
-                    Clipboard.setData(ClipboardData(text: value));
+                    SecureClipboard.copy(value);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('${field.label} 已复制')),
                     );
@@ -456,7 +456,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
           buffer.writeln('${field.label}: $value');
         }
       }
-      Clipboard.setData(ClipboardData(text: buffer.toString()));
+      SecureClipboard.copy(buffer.toString());
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('条目信息已复制到剪贴板')),
       );

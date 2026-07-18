@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import '../utils/password_generator.dart';
+import '../utils/secure_clipboard.dart';
 
 class PasswordGeneratorScreen extends StatefulWidget {
   const PasswordGeneratorScreen({super.key});
@@ -116,9 +116,9 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     return Expanded(
       child: OutlinedButton.icon(
         onPressed: () {
-          Clipboard.setData(ClipboardData(text: text));
+          SecureClipboard.copy(text);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$label 已复制')),
+            const SnackBar(content: Text('密码已复制，30 秒后自动清除')),
           );
           if (closeAfterCopy) {
             Navigator.pop(context, text);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'providers/vault_provider.dart';
 import 'screens/setup_screen.dart';
@@ -14,9 +15,11 @@ import 'screens/settings_screen.dart';
 import 'screens/password_generator_screen.dart';
 import 'theme/app_theme.dart';
 import 'models/password_entry.dart';
+import 'widgets/ios_surface.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   
   FlutterError.onError = (details) {
     final exception = details.exception.toString();
@@ -128,17 +131,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            center: const Alignment(0, -0.5),
-            radius: 1.5,
-            colors: [
-              AppColors.accent.withOpacity(0.08),
-              AppColors.bg.withOpacity(0),
-            ],
-          ),
-        ),
+      body: IosBackdrop(
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,

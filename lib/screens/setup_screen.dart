@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/vault_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_logo.dart';
+import '../widgets/ios_surface.dart';
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({super.key});
@@ -52,24 +53,16 @@ class _SetupScreenState extends State<SetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            center: const Alignment(0, -0.5),
-            radius: 1.5,
-            colors: [
-              AppColors.accent.withOpacity(0.08),
-              AppColors.bg.withOpacity(0),
-            ],
-          ),
-        ),
+      body: IosBackdrop(
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const AppLogo(size: 100, isHero: true),
@@ -258,6 +251,7 @@ class _SetupScreenState extends State<SetupScreen> {
                       ),
                     ),
                   ],
+                  ),
                 ),
               ),
             ),
