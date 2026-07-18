@@ -30,6 +30,9 @@ jobs:
       - run: flutter pub get
       - run: flutter build web --release --base-href /mixia/
       
+      - name: Add .nojekyll for GitHub Pages
+        run: touch build/web/.nojekyll
+      
       - name: Package Web (GitHub Pages)
         run: |
           cd build/web
