@@ -270,12 +270,15 @@ class VaultProvider extends ChangeNotifier {
   }
 
   Future<String> exportVault() async {
-    return await _storageService.exportVault(_vault);
+    return await _storageService.exportVault(_vault, _masterPassword);
   }
 
   Future<bool> importVault(String jsonStr) async {
     try {
-      final imported = await _storageService.importVault(jsonStr);
+      final imported = await _storageService.importVault(
+        jsonStr,
+        _masterPassword,
+      );
       if (imported != null) {
         _vault = imported;
         await _saveVault();
@@ -370,8 +373,10 @@ class VaultProvider extends ChangeNotifier {
         return SyncResult(success: false, errorMessage: testResult.errorMessage);
       }
 
-      final vaultJson = await _storageService.exportVault(_vault);
-      final encryptedContent = vaultJson;
+      final encryptedContent = await _storageService.exportVault(
+        _vault,
+        _masterPassword,
+      );
 
       final fileName = 'vault_${DateTime.now().millisecondsSinceEpoch}.json';
       final result = await service.uploadFile(fileName, encryptedContent);
@@ -443,7 +448,10 @@ class VaultProvider extends ChangeNotifier {
         return SyncResult(success: false, errorMessage: '下载备份文件失败');
       }
 
-      final imported = await _storageService.importVault(content);
+      final imported = await _storageService.importVault(
+        content,
+        _masterPassword,
+      );
       if (imported != null) {
         _vault = imported;
         await _saveVault();

@@ -26,81 +26,58 @@ class StorageService {
     mOptions: MacOsOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
+    wOptions: WindowsOptions(),
+    lOptions: LinuxOptions(),
   );
 
-  bool get _useFileStorage {
-    if (kIsWeb) return false;
-    return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
-  }
-
-  Future<Directory> get _appSupportDir async {
-    final dir = await getApplicationSupportDirectory();
-    final appDir = Directory('${dir.path}/mi_xia');
-    if (!await appDir.exists()) {
-      await appDir.create(recursive: true);
-    }
-    return appDir;
-  }
-
-  Future<File> _getSecureFile(String key) async {
-    final dir = await _appSupportDir;
-    return File('${dir.path}/$key.secure');
-  }
-
   Future<void> _writeSecureData(String key, String value) async {
-    if (_useFileStorage) {
-      final file = await _getSecureFile(key);
-      await file.writeAsString(value);
-    } else {
-      await _secureStorage.write(key: key, value: value);
+    await _secureStorage.write(key: key, value: value);
+    final legacyFile = await _legacyFile(key);
+    if (legacyFile != null && await legacyFile.exists()) {
+      await legacyFile.delete();
     }
   }
 
   Future<String?> _readSecureData(String key) async {
-    if (_useFileStorage) {
-      try {
-        final file = await _getSecureFile(key);
-        if (await file.exists()) {
-          return await file.readAsString();
-        }
-        return null;
-      } catch (e) {
-        debugPrint('Error reading secure file: $e');
-        return null;
-      }
-    } else {
-      return await _secureStorage.read(key: key);
+    final secureValue = await _secureStorage.read(key: key);
+    if (secureValue != null) return secureValue;
+    final legacyFile = await _legacyFile(key);
+    if (legacyFile != null && await legacyFile.exists()) {
+      final legacyValue = await legacyFile.readAsString();
+      await _secureStorage.write(key: key, value: legacyValue);
+      await legacyFile.delete();
+      return legacyValue;
     }
+    return null;
   }
 
   Future<void> _deleteSecureData(String key) async {
-    if (_useFileStorage) {
-      try {
-        final file = await _getSecureFile(key);
-        if (await file.exists()) {
-          await file.delete();
-        }
-      } catch (e) {
-        debugPrint('Error deleting secure file: $e');
-      }
-    } else {
-      await _secureStorage.delete(key: key);
+    await _secureStorage.delete(key: key);
+    final legacyFile = await _legacyFile(key);
+    if (legacyFile != null && await legacyFile.exists()) {
+      await legacyFile.delete();
     }
   }
 
   Future<void> _deleteAllSecureData() async {
-    if (_useFileStorage) {
-      try {
-        final dir = await _appSupportDir;
-        if (await dir.exists()) {
-          await dir.delete(recursive: true);
-        }
-      } catch (e) {
-        debugPrint('Error deleting secure directory: $e');
+    await _secureStorage.deleteAll();
+    if (!kIsWeb &&
+        (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
+      final supportDir = await getApplicationSupportDirectory();
+      final legacyDir = Directory('${supportDir.path}/mi_xia');
+      if (await legacyDir.exists()) {
+        await legacyDir.delete(recursive: true);
       }
-    } else {
-      await _secureStorage.deleteAll();
     }
+  }
+
+  Future<File?> _legacyFile(String key) async {
+    if (kIsWeb ||
+        !(Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
+      return null;
+    }
+    final supportDir = await getApplicationSupportDirectory();
+    return File('${supportDir.path}/mi_xia/$key.secure');
   }
 
   Future<void> saveVault(Vault vault, String masterPassword) async {
@@ -121,7 +98,11 @@ class StorageService {
     try {
       final decrypted = EncryptionService.decrypt(encrypted, masterPassword);
       final json = jsonDecode(decrypted) as Map<String, dynamic>;
-      return Vault.fromJson(json);
+      final vault = Vault.fromJson(json);
+      if (!encrypted.startsWith('mx2:')) {
+        await saveVault(vault, masterPassword);
+      }
+      return vault;
     } catch (e) {
       return null;
     }
@@ -145,7 +126,11 @@ class StorageService {
   Future<bool> verifyMasterPassword(String password) async {
     final storedHash = await getMasterPasswordHash();
     if (storedHash == null) return false;
-    return EncryptionService.verifyPassword(password, storedHash);
+    final verified = EncryptionService.verifyPassword(password, storedHash);
+    if (verified && !storedHash.startsWith('argon2id:')) {
+      await saveMasterPasswordHash(password);
+    }
+    return verified;
   }
 
   Future<bool> hasMasterPassword() async {
@@ -154,18 +139,25 @@ class StorageService {
   }
 
   Future<void> saveSyncConfig(SyncConfig config) async {
+    await _writeSecureData(_syncConfigKey, jsonEncode(config.toJson()));
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_syncConfigKey, jsonEncode(config.toJson()));
+    await prefs.remove(_syncConfigKey);
   }
 
   Future<SyncConfig?> loadSyncConfig() async {
+    var jsonStr = await _readSecureData(_syncConfigKey);
     final prefs = await SharedPreferences.getInstance();
-    final jsonStr = prefs.getString(_syncConfigKey);
+    final legacyJson = prefs.getString(_syncConfigKey);
+    jsonStr ??= legacyJson;
     if (jsonStr == null) return null;
 
     try {
       final json = jsonDecode(jsonStr) as Map<String, dynamic>;
-      return SyncConfig.fromJson(json);
+      final config = SyncConfig.fromJson(json);
+      if (legacyJson != null) {
+        await saveSyncConfig(config);
+      }
+      return config;
     } catch (e) {
       return null;
     }
@@ -221,13 +213,20 @@ class StorageService {
     await _deleteAllSecureData();
   }
 
-  Future<String> exportVault(Vault vault) async {
-    return jsonEncode(vault.toJson());
+  Future<String> exportVault(Vault vault, String masterPassword) async {
+    return EncryptionService.encrypt(
+      jsonEncode(vault.toJson()),
+      masterPassword,
+    );
   }
 
-  Future<Vault?> importVault(String jsonStr) async {
+  Future<Vault?> importVault(String backup, String masterPassword) async {
     try {
-      final json = jsonDecode(jsonStr) as Map<String, dynamic>;
+      final content = backup.trim();
+      final plaintext = content.startsWith('mx2:')
+          ? EncryptionService.decrypt(content, masterPassword)
+          : content;
+      final json = jsonDecode(plaintext) as Map<String, dynamic>;
       return Vault.fromJson(json);
     } catch (e) {
       return null;

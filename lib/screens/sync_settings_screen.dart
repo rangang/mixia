@@ -229,7 +229,6 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
         ),
         const SizedBox(height: 12),
         _buildProtocolCard(
-          type: SyncType.webdav,
           title: 'WebDAV',
           subtitle: '支持坚果云、Nextcloud、群晖/威联通NAS等',
           icon: Icons.cloud,
@@ -260,12 +259,10 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
   }
 
   Widget _buildProtocolCard({
-    required SyncType type,
     required String title,
     required String subtitle,
     required IconData icon,
   }) {
-    final isSelected = true;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
