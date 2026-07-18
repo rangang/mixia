@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/password_entry.dart';
 import '../models/entry_type_config.dart';
 import '../theme/app_theme.dart';
+import '../utils/secure_clipboard.dart';
 
 class EntryListItem extends StatelessWidget {
   final PasswordEntry entry;
@@ -53,9 +53,11 @@ class EntryListItem extends StatelessWidget {
         onDelete?.call();
       },
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.bg2.withOpacity(0.92),
+        borderRadius: BorderRadius.circular(18),
         child: InkWell(
           onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: SizedBox(
@@ -242,9 +244,9 @@ class EntryListItem extends StatelessWidget {
         final field = _getPrimaryCopyField();
         if (field != null) {
           final value = entry.getField(field.key);
-          Clipboard.setData(ClipboardData(text: value));
+          SecureClipboard.copy(value);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${field.label} 已复制到剪贴板')),
+            SnackBar(content: Text('${field.label}已复制，30 秒后自动清除')),
           );
         }
         break;
@@ -252,9 +254,9 @@ class EntryListItem extends StatelessWidget {
         final field = _getSensitiveField();
         if (field != null) {
           final value = entry.getField(field.key);
-          Clipboard.setData(ClipboardData(text: value));
+          SecureClipboard.copy(value);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${field.label} 已复制到剪贴板')),
+            SnackBar(content: Text('${field.label}已复制，30 秒后自动清除')),
           );
         }
         break;
@@ -273,9 +275,9 @@ class EntryListItem extends StatelessWidget {
           buffer.writeln('');
           buffer.writeln('备注: $notes');
         }
-        Clipboard.setData(ClipboardData(text: buffer.toString()));
+        SecureClipboard.copy(buffer.toString());
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('条目信息已复制到剪贴板')),
+          const SnackBar(content: Text('条目信息已复制，30 秒后自动清除')),
         );
         break;
       case 'favorite':
