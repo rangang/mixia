@@ -115,7 +115,7 @@ class StorageService {
       final decrypted = EncryptionService.decrypt(encrypted, masterPassword);
       final json = jsonDecode(decrypted) as Map<String, dynamic>;
       final vault = Vault.fromJson(json);
-      if (!encrypted.startsWith('mx2:')) {
+      if (!EncryptionService.isCurrentFormat(encrypted)) {
         await saveVault(vault, masterPassword);
       }
       return vault;
@@ -149,8 +149,8 @@ class StorageService {
   }
 
   Future<bool> hasMasterPassword() async {
-    final hash = await getMasterPasswordHash();
-    return hash != null;
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.containsKey(_vaultKey);
   }
 
   Future<void> saveSyncConfig(SyncConfig config) async {

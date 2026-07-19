@@ -144,24 +144,21 @@ class VaultProvider extends ChangeNotifier {
     debugPrint('setMasterPassword: start');
     _isLoading = true;
     notifyListeners();
+    await Future<void>.delayed(Duration.zero);
     try {
-      debugPrint('setMasterPassword: saving hash...');
-      await _storageService.saveMasterPasswordHash(password);
-      debugPrint('setMasterPassword: hash saved');
-      
       _masterPassword = password;
       _vault = Vault();
-      
+
       debugPrint('setMasterPassword: saving vault...');
       await _storageService.saveVault(_vault, _masterPassword);
       debugPrint('setMasterPassword: vault saved');
-      
+
       _biometricAvailable = await BiometricService.isBiometricAvailable();
       if (_biometricAvailable) {
         await _storageService.setBiometricEnabled(true, masterPassword: password);
         _biometricEnabled = true;
       }
-      
+
       _authState = AuthState.authenticated;
       _errorMessage = null;
     } catch (e, stackTrace) {
@@ -177,17 +174,15 @@ class VaultProvider extends ChangeNotifier {
   Future<bool> unlock(String password) async {
     _isLoading = true;
     notifyListeners();
+    await Future<void>.delayed(Duration.zero);
     try {
-      final isValid = await _storageService.verifyMasterPassword(password);
-      if (isValid) {
+      final vault = await _storageService.loadVault(password);
+      if (vault != null) {
         _masterPassword = password;
-        final vault = await _storageService.loadVault(password);
-        if (vault != null) {
-          _vault = vault;
-          _authState = AuthState.authenticated;
-          _errorMessage = null;
-          return true;
-        }
+        _vault = vault;
+        _authState = AuthState.authenticated;
+        _errorMessage = null;
+        return true;
       }
       _errorMessage = '主密码错误';
       return false;

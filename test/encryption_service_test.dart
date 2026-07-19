@@ -8,7 +8,7 @@ void main() {
 
     final encrypted = EncryptionService.encrypt(plaintext, password);
 
-    expect(encrypted, startsWith('mx2:'));
+    expect(encrypted, startsWith('mx3:'));
     expect(EncryptionService.decrypt(encrypted, password), plaintext);
   });
 

@@ -4,16 +4,20 @@ import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:pointycastle/export.dart';
 
 class EncryptionService {
-  static const _formatPrefix = 'mx2:';
+  static const _formatPrefix = 'mx3:';
+  static const _previousFormatPrefix = 'mx2:';
   static const _passwordPrefix = 'argon2id:';
   static const int _keyLength = 32;
   static const int _saltLength = 16;
   static const int _nonceLength = 12;
   static const int _argonIterations = 3;
   static const int _argonMemoryKb = 64 * 1024;
+  static const int _webArgonIterations = 2;
+  static const int _webArgonMemoryKb = 12 * 1024;
 
   static Uint8List generateSalt() {
     final random = Random.secure();
@@ -22,13 +26,18 @@ class EncryptionService {
     );
   }
 
-  static Uint8List deriveKey(String password, Uint8List salt) {
+  static Uint8List deriveKey(
+    String password,
+    Uint8List salt, {
+    int iterations = _argonIterations,
+    int memoryKb = _argonMemoryKb,
+  }) {
     final parameters = Argon2Parameters(
       Argon2Parameters.ARGON2_id,
       salt,
       desiredKeyLength: _keyLength,
-      iterations: _argonIterations,
-      memory: _argonMemoryKb,
+      iterations: iterations,
+      memory: memoryKb,
       lanes: 1,
       version: Argon2Parameters.ARGON2_VERSION_13,
     );
@@ -44,9 +53,16 @@ class EncryptionService {
   }
 
   static String encrypt(String plaintext, String password) {
+    final iterations = kIsWeb ? _webArgonIterations : _argonIterations;
+    final memoryKb = kIsWeb ? _webArgonMemoryKb : _argonMemoryKb;
     final salt = generateSalt();
     final nonce = _randomBytes(_nonceLength);
-    final key = deriveKey(password, salt);
+    final key = deriveKey(
+      password,
+      salt,
+      iterations: iterations,
+      memoryKb: memoryKb,
+    );
     final cipher = GCMBlockCipher(AESEngine())
       ..init(
         true,
@@ -57,8 +73,14 @@ class EncryptionService {
           Uint8List.fromList(utf8.encode(_formatPrefix)),
         ),
       );
-    final encrypted = cipher.process(Uint8List.fromList(utf8.encode(plaintext)));
+    final encrypted = cipher.process(
+      Uint8List.fromList(utf8.encode(plaintext)),
+    );
+    final parameters = ByteData(5)
+      ..setUint8(0, iterations)
+      ..setUint32(1, memoryKb, Endian.big);
     final payload = BytesBuilder()
+      ..add(parameters.buffer.asUint8List())
       ..add(salt)
       ..add(nonce)
       ..add(encrypted);
@@ -66,6 +88,16 @@ class EncryptionService {
   }
 
   static String decrypt(String ciphertext, String password) {
+    if (ciphertext.startsWith(_previousFormatPrefix)) {
+      return _decryptAuthenticated(
+        ciphertext,
+        password,
+        prefix: _previousFormatPrefix,
+        iterations: _argonIterations,
+        memoryKb: _argonMemoryKb,
+        parameterHeaderLength: 0,
+      );
+    }
     if (!ciphertext.startsWith(_formatPrefix)) {
       return _legacyDecrypt(ciphertext, password);
     }
@@ -73,14 +105,51 @@ class EncryptionService {
     final bytes = Uint8List.fromList(
       hex.decode(ciphertext.substring(_formatPrefix.length)),
     );
-    if (bytes.length < _saltLength + _nonceLength + 16) {
+    if (bytes.length < 5 + _saltLength + _nonceLength + 16) {
       throw const FormatException('加密数据不完整');
     }
+    final parameters = ByteData.sublistView(bytes, 0, 5);
+    final iterations = parameters.getUint8(0);
+    final memoryKb = parameters.getUint32(1, Endian.big);
+    if (iterations < 1 || memoryKb < 8 * 1024 || memoryKb > 256 * 1024) {
+      throw const FormatException('密钥派生参数无效');
+    }
+    return _decryptAuthenticated(
+      ciphertext,
+      password,
+      prefix: _formatPrefix,
+      iterations: iterations,
+      memoryKb: memoryKb,
+      parameterHeaderLength: 5,
+    );
+  }
 
-    final salt = bytes.sublist(0, _saltLength);
-    final nonce = bytes.sublist(_saltLength, _saltLength + _nonceLength);
-    final encrypted = bytes.sublist(_saltLength + _nonceLength);
-    final key = deriveKey(password, salt);
+  static String _decryptAuthenticated(
+    String ciphertext,
+    String password, {
+    required String prefix,
+    required int iterations,
+    required int memoryKb,
+    required int parameterHeaderLength,
+  }) {
+    final bytes = Uint8List.fromList(
+      hex.decode(ciphertext.substring(prefix.length)),
+    );
+    final saltStart = parameterHeaderLength;
+    final nonceStart = saltStart + _saltLength;
+    final encryptedStart = nonceStart + _nonceLength;
+    if (bytes.length < encryptedStart + 16) {
+      throw const FormatException('加密数据不完整');
+    }
+    final salt = bytes.sublist(saltStart, nonceStart);
+    final nonce = bytes.sublist(nonceStart, encryptedStart);
+    final encrypted = bytes.sublist(encryptedStart);
+    final key = deriveKey(
+      password,
+      salt,
+      iterations: iterations,
+      memoryKb: memoryKb,
+    );
     final cipher = GCMBlockCipher(AESEngine())
       ..init(
         false,
@@ -88,16 +157,24 @@ class EncryptionService {
           KeyParameter(key),
           128,
           nonce,
-          Uint8List.fromList(utf8.encode(_formatPrefix)),
+          Uint8List.fromList(utf8.encode(prefix)),
         ),
       );
     return utf8.decode(cipher.process(encrypted));
   }
 
   static String hashPassword(String password) {
+    final iterations = kIsWeb ? _webArgonIterations : _argonIterations;
+    final memoryKb = kIsWeb ? _webArgonMemoryKb : _argonMemoryKb;
     final salt = generateSalt();
-    final hash = deriveKey(password, salt);
-    return '$_passwordPrefix${hex.encode(salt)}:${hex.encode(hash)}';
+    final hash = deriveKey(
+      password,
+      salt,
+      iterations: iterations,
+      memoryKb: memoryKb,
+    );
+    return '$_passwordPrefix$iterations:$memoryKb:'
+        '${hex.encode(salt)}:${hex.encode(hash)}';
   }
 
   static bool verifyPassword(String password, String storedHash) {
@@ -109,11 +186,25 @@ class EncryptionService {
     }
 
     final parts = storedHash.split(':');
-    if (parts.length != 3) return false;
-    final salt = Uint8List.fromList(hex.decode(parts[1]));
-    final expected = Uint8List.fromList(hex.decode(parts[2]));
-    return _constantTimeEquals(deriveKey(password, salt), expected);
+    if (parts.length == 3) {
+      final salt = Uint8List.fromList(hex.decode(parts[1]));
+      final expected = Uint8List.fromList(hex.decode(parts[2]));
+      return _constantTimeEquals(deriveKey(password, salt), expected);
+    }
+    if (parts.length != 5) return false;
+    final iterations = int.tryParse(parts[1]);
+    final memoryKb = int.tryParse(parts[2]);
+    if (iterations == null || memoryKb == null) return false;
+    final salt = Uint8List.fromList(hex.decode(parts[3]));
+    final expected = Uint8List.fromList(hex.decode(parts[4]));
+    return _constantTimeEquals(
+      deriveKey(password, salt, iterations: iterations, memoryKb: memoryKb),
+      expected,
+    );
   }
+
+  static bool isCurrentFormat(String ciphertext) =>
+      ciphertext.startsWith(_formatPrefix);
 
   static Uint8List _randomBytes(int length) {
     final random = Random.secure();
