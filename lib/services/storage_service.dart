@@ -16,68 +16,84 @@ class StorageService {
   static const String _settingsKey = 'mi_xia_settings';
   static const String _biometricEnabledKey = 'mi_xia_biometric_enabled';
 
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
-    iOptions: IOSOptions(
-      accessibility: KeychainAccessibility.first_unlock_this_device,
-    ),
-    mOptions: MacOsOptions(
-      accessibility: KeychainAccessibility.first_unlock_this_device,
-    ),
-    wOptions: WindowsOptions(),
-    lOptions: LinuxOptions(),
-  );
+  final FlutterSecureStorage? _secureStorage;
+  static Directory? _supportDir;
+
+  StorageService() : _secureStorage = _shouldUseSecureStorage()
+      ? const FlutterSecureStorage(
+          aOptions: AndroidOptions(
+            encryptedSharedPreferences: true,
+          ),
+          iOptions: IOSOptions(
+            accessibility: KeychainAccessibility.first_unlock_this_device,
+          ),
+        )
+      : null;
+
+  static bool _shouldUseSecureStorage() {
+    if (kIsWeb) return true;
+    return !(Platform.isMacOS || Platform.isWindows || Platform.isLinux);
+  }
+
+  Future<Directory> _getSecureDir() async {
+    if (_supportDir != null) return _supportDir!;
+    final appSupportDir = await getApplicationSupportDirectory();
+    _supportDir = Directory('${appSupportDir.path}/mi_xia');
+    if (!await _supportDir!.exists()) {
+      await _supportDir!.create(recursive: true);
+    }
+    return _supportDir!;
+  }
+
+  Future<File> _getSecureFile(String key) async {
+    final dir = await _getSecureDir();
+    return File('${dir.path}/$key.secure');
+  }
 
   Future<void> _writeSecureData(String key, String value) async {
-    await _secureStorage.write(key: key, value: value);
-    final legacyFile = await _legacyFile(key);
-    if (legacyFile != null && await legacyFile.exists()) {
-      await legacyFile.delete();
+    if (_secureStorage != null) {
+      await _secureStorage.write(key: key, value: value);
+    } else {
+      final file = await _getSecureFile(key);
+      await file.writeAsString(value);
     }
   }
 
   Future<String?> _readSecureData(String key) async {
-    final secureValue = await _secureStorage.read(key: key);
-    if (secureValue != null) return secureValue;
-    final legacyFile = await _legacyFile(key);
-    if (legacyFile != null && await legacyFile.exists()) {
-      final legacyValue = await legacyFile.readAsString();
-      await _secureStorage.write(key: key, value: legacyValue);
-      await legacyFile.delete();
-      return legacyValue;
+    if (_secureStorage != null) {
+      return await _secureStorage.read(key: key);
+    } else {
+      final file = await _getSecureFile(key);
+      if (await file.exists()) {
+        return await file.readAsString();
+      }
+      return null;
     }
-    return null;
   }
 
   Future<void> _deleteSecureData(String key) async {
-    await _secureStorage.delete(key: key);
-    final legacyFile = await _legacyFile(key);
-    if (legacyFile != null && await legacyFile.exists()) {
-      await legacyFile.delete();
-    }
-  }
-
-  Future<void> _deleteAllSecureData() async {
-    await _secureStorage.deleteAll();
-    if (!kIsWeb &&
-        (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
-      final supportDir = await getApplicationSupportDirectory();
-      final legacyDir = Directory('${supportDir.path}/mi_xia');
-      if (await legacyDir.exists()) {
-        await legacyDir.delete(recursive: true);
+    if (_secureStorage != null) {
+      await _secureStorage.delete(key: key);
+    } else {
+      final file = await _getSecureFile(key);
+      if (await file.exists()) {
+        await file.delete();
       }
     }
   }
 
-  Future<File?> _legacyFile(String key) async {
-    if (kIsWeb ||
-        !(Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
-      return null;
+  Future<void> _deleteAllSecureData() async {
+    if (_secureStorage != null) {
+      await _secureStorage.deleteAll();
     }
-    final supportDir = await getApplicationSupportDirectory();
-    return File('${supportDir.path}/mi_xia/$key.secure');
+    if (!kIsWeb &&
+        (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
+      final dir = await _getSecureDir();
+      if (await dir.exists()) {
+        await dir.delete(recursive: true);
+        _supportDir = null;
+      }
+    }
   }
 
   Future<void> saveVault(Vault vault, String masterPassword) async {
@@ -112,7 +128,6 @@ class StorageService {
     try {
       final hash = EncryptionService.hashPassword(password);
       await _writeSecureData(_masterPasswordHashKey, hash);
-      debugPrint('saveMasterPasswordHash: success');
     } catch (e) {
       debugPrint('saveMasterPasswordHash error: $e');
       rethrow;

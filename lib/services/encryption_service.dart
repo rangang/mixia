@@ -34,11 +34,11 @@ class EncryptionService {
     );
     final generator = Argon2BytesGenerator()..init(parameters);
     final key = Uint8List(_keyLength);
-    generator.generateBytes(
+    generator.deriveKey(
       Uint8List.fromList(utf8.encode(password)),
+      0,
       key,
       0,
-      key.length,
     );
     return key;
   }
