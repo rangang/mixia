@@ -23,9 +23,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('设置'),
-      ),
+      appBar: AppBar(title: const Text('设置')),
       body: Consumer<VaultProvider>(
         builder: (context, provider, _) {
           if (Responsive.isDesktop(context)) {
@@ -48,7 +46,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  List<Widget> _buildSettingsList(BuildContext context, VaultProvider provider) {
+  List<Widget> _buildSettingsList(
+    BuildContext context,
+    VaultProvider provider,
+  ) {
     return [
       _buildSectionHeader('安全'),
       _buildSettingTile(
@@ -64,11 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         icon: Icons.timer_outlined,
         title: '自动锁定',
         subtitle: '5分钟无操作后自动锁定',
-        trailing: Switch(
-          value: true,
-          onChanged: (value) {},
-          activeColor: AppColors.accent,
-        ),
+        trailing: Switch(value: true, onChanged: (value) {}),
       ),
       Consumer<VaultProvider>(
         builder: (context, provider, _) {
@@ -76,15 +73,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             return _buildSettingTile(
               icon: Icons.fingerprint,
               title: '生物识别解锁',
-              subtitle: provider.biometricEnabled 
-                  ? '已启用 Touch ID/Face ID' 
+              subtitle: provider.biometricEnabled
+                  ? '已启用 Touch ID/Face ID'
                   : '使用指纹或面容快速解锁',
               trailing: Switch(
                 value: provider.biometricEnabled,
                 onChanged: provider.isAuthenticated
                     ? (value) => provider.setBiometricEnabled(value)
                     : null,
-                activeColor: AppColors.accent,
               ),
             );
           }
@@ -113,8 +109,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _buildSettingTile(
         icon: Icons.cloud_sync_outlined,
         title: '立即同步',
-        subtitle: provider.syncConfig?.enabled == true 
-            ? (provider.isSyncing ? '同步中...' : '上次同步: ${_formatLastSync(provider.syncConfig?.lastSyncTime)}')
+        subtitle: provider.syncConfig?.enabled == true
+            ? (provider.isSyncing
+                  ? '同步中...'
+                  : '上次同步: ${_formatLastSync(provider.syncConfig?.lastSyncTime)}')
             : '请先在同步设置中配置并启用',
         onTap: provider.syncConfig?.enabled == true && !provider.isSyncing
             ? () => _showSyncDialog(context, provider)
@@ -146,7 +144,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onChanged: (value) {
             provider.setDarkMode(value);
           },
-          activeColor: AppColors.accent,
         ),
       ),
       const SizedBox(height: 24),
@@ -181,12 +178,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _syncSuccess 
+        color: _syncSuccess
             ? AppColors.success.withOpacity(0.1)
             : AppColors.error.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: _syncSuccess 
+          color: _syncSuccess
               ? AppColors.success.withOpacity(0.3)
               : AppColors.error.withOpacity(0.3),
         ),
@@ -218,7 +215,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return '${time.month}/${time.day} ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _showSyncDialog(BuildContext context, VaultProvider provider) async {
+  Future<void> _showSyncDialog(
+    BuildContext context,
+    VaultProvider provider,
+  ) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -275,7 +275,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _performSync(BuildContext context, VaultProvider provider, {required bool isUpload}) async {
+  Future<void> _performSync(
+    BuildContext context,
+    VaultProvider provider, {
+    required bool isUpload,
+  }) async {
     setState(() {
       _isSyncing = true;
       _syncMessage = isUpload ? '正在上传到云端...' : '正在从云端同步...';
@@ -283,13 +287,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
 
     try {
-      final result = isUpload 
-          ? await provider.syncToCloud() 
+      final result = isUpload
+          ? await provider.syncToCloud()
           : await provider.syncFromCloud();
-      
+
       setState(() {
         _isSyncing = false;
-        _syncMessage = result.success 
+        _syncMessage = result.success
             ? (isUpload ? '上传成功！数据已备份到云端' : '同步成功！已从云端恢复数据')
             : result.errorMessage ?? '同步失败';
         _syncSuccess = result.success;
@@ -303,17 +307,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _exportVault(BuildContext context, VaultProvider provider) async {
+  Future<void> _exportVault(
+    BuildContext context,
+    VaultProvider provider,
+  ) async {
     try {
       final json = await provider.exportVault();
-      
+
       await Clipboard.setData(ClipboardData(text: json));
-      
+
       String? filePath;
-      if (!kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
+      if (!kIsWeb &&
+          (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
         try {
           final dir = await getApplicationDocumentsDirectory();
-          final fileName = 'mi_xia_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+          final fileName =
+              'mi_xia_backup_${DateTime.now().millisecondsSinceEpoch}.json';
           final file = File('${dir.path}/$fileName');
           await file.writeAsString(json);
           filePath = file.path;
@@ -321,7 +330,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           debugPrint('Failed to save file: $e');
         }
       }
-      
+
       if (context.mounted) {
         showDialog(
           context: context,
@@ -342,7 +351,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.bg3,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Row(
@@ -350,10 +361,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Icon(Icons.check, color: AppColors.success, size: 18),
                       SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          '已复制到剪贴板',
-                          style: TextStyle(fontSize: 13),
-                        ),
+                        child: Text('已复制到剪贴板', style: TextStyle(fontSize: 13)),
                       ),
                     ],
                   ),
@@ -363,17 +371,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.bg3,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.folder, color: AppColors.accent, size: 18),
+                        const Icon(
+                          Icons.folder,
+                          color: AppColors.accent,
+                          size: 18,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             '已保存到: $filePath',
-                            style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 2,
                           ),
@@ -388,16 +407,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.warning.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                    border: Border.all(
+                      color: AppColors.warning.withOpacity(0.3),
+                    ),
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
+                      Icon(
+                        Icons.warning_amber,
+                        color: AppColors.warning,
+                        size: 20,
+                      ),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           '备份文件包含加密数据，请妥善保管，不要分享给他人',
-                          style: TextStyle(color: AppColors.warning, fontSize: 12),
+                          style: TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -423,7 +451,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _showImportDialog(BuildContext context, VaultProvider provider) async {
+  Future<void> _showImportDialog(
+    BuildContext context,
+    VaultProvider provider,
+  ) async {
     final controller = TextEditingController();
     bool isLoading = false;
     String? errorMessage;
@@ -482,42 +513,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: const Text('取消'),
             ),
             ElevatedButton(
-              onPressed: isLoading ? null : () async {
-                if (controller.text.trim().isEmpty) {
-                  setDialogState(() {
-                    errorMessage = '请输入备份内容';
-                  });
-                  return;
-                }
-                
-                setDialogState(() {
-                  isLoading = true;
-                  errorMessage = null;
-                });
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (controller.text.trim().isEmpty) {
+                        setDialogState(() {
+                          errorMessage = '请输入备份内容';
+                        });
+                        return;
+                      }
 
-                try {
-                  final success = await provider.importVault(controller.text.trim());
-                  if (success && context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('导入成功！密码库已恢复'),
-                        backgroundColor: AppColors.success,
-                      ),
-                    );
-                  } else {
-                    setDialogState(() {
-                      isLoading = false;
-                      errorMessage = '导入失败：无效的备份数据';
-                    });
-                  }
-                } catch (e) {
-                  setDialogState(() {
-                    isLoading = false;
-                    errorMessage = '导入错误: $e';
-                  });
-                }
-              },
+                      setDialogState(() {
+                        isLoading = true;
+                        errorMessage = null;
+                      });
+
+                      try {
+                        final success = await provider.importVault(
+                          controller.text.trim(),
+                        );
+                        if (success && context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('导入成功！密码库已恢复'),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                        } else {
+                          setDialogState(() {
+                            isLoading = false;
+                            errorMessage = '导入失败：无效的备份数据';
+                          });
+                        }
+                      } catch (e) {
+                        setDialogState(() {
+                          isLoading = false;
+                          errorMessage = '导入错误: $e';
+                        });
+                      }
+                    },
               child: const Text('导入'),
             ),
           ],
@@ -545,38 +580,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildHelpSection(
                 '快速开始',
                 '1. 首次使用请设置主密码，这是解锁密码库的唯一密钥\n'
-                '2. 点击右下角"+"按钮添加密码条目\n'
-                '3. 可以按类别（网站、应用、银行卡、安全笔记）组织密码',
+                    '2. 点击右下角"+"按钮添加密码条目\n'
+                    '3. 可以按类别（网站、应用、银行卡、安全笔记）组织密码',
               ),
               const SizedBox(height: 16),
               _buildHelpSection(
                 '主密码说明',
                 '• 主密码是您密码库的唯一密钥，丢失后无法恢复\n'
-                '• 请使用强密码并妥善记忆\n'
-                '• 应用使用AES-256-GCM加密所有数据',
+                    '• 请使用强密码并妥善记忆\n'
+                    '• 应用使用AES-256-GCM加密所有数据',
               ),
               const SizedBox(height: 16),
               _buildHelpSection(
                 'WebDAV同步',
                 '• 支持坚果云、Nextcloud、群晖NAS等\n'
-                '• 数据在上传前已在本地加密，云端只存储密文\n'
-                '• 坚果云需要使用"第三方应用密码"而非登录密码\n'
-                '• macOS桌面端可以直接连接自签名HTTPS服务器',
+                    '• 数据在上传前已在本地加密，云端只存储密文\n'
+                    '• 坚果云需要使用"第三方应用密码"而非登录密码\n'
+                    '• macOS桌面端可以直接连接自签名HTTPS服务器',
               ),
               const SizedBox(height: 16),
               _buildHelpSection(
                 '数据备份',
                 '• 建议定期导出备份文件\n'
-                '• 备份文件是加密的JSON格式\n'
-                '• 可以将备份文件存储在安全的位置',
+                    '• 备份文件是加密的JSON格式\n'
+                    '• 可以将备份文件存储在安全的位置',
               ),
               const SizedBox(height: 16),
               _buildHelpSection(
                 '常见问题',
                 'Q: 忘记主密码怎么办？\n'
-                'A: 主密码无法找回，只能重置密码库（所有数据将丢失）\n\n'
-                'Q: WebDAV连接失败？\n'
-                'A: 请检查服务器地址、用户名密码、网络连接，以及CORS/证书设置',
+                    'A: 主密码无法找回，只能重置密码库（所有数据将丢失）\n\n'
+                    'Q: WebDAV连接失败？\n'
+                    'A: 请检查服务器地址、用户名密码、网络连接，以及CORS/证书设置',
               ),
             ],
           ),
@@ -592,13 +627,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildHelpSection(String title, String content) {
+    final colors = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
-            color: AppColors.ink,
+          style: TextStyle(
+            color: colors.onSurface,
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
@@ -606,8 +642,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 6),
         Text(
           content,
-          style: const TextStyle(
-            color: AppColors.muted,
+          style: TextStyle(
+            color: colors.onSurfaceVariant,
             fontSize: 12,
             height: 1.5,
           ),
@@ -617,12 +653,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSectionHeader(String title) {
+    final colors = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, left: 4),
       child: Text(
         title,
-        style: const TextStyle(
-          color: AppColors.muted,
+        style: TextStyle(
+          color: colors.onSurfaceVariant,
           fontSize: 12,
           fontWeight: FontWeight.w600,
           letterSpacing: 1,
@@ -640,24 +677,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Color? textColor,
     Color? iconColor,
   }) {
+    final colors = Theme.of(context).colorScheme;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Icon(icon, color: iconColor ?? AppColors.accent),
         title: Text(
           title,
-          style: TextStyle(color: textColor ?? AppColors.ink),
+          style: TextStyle(color: textColor ?? colors.onSurface),
         ),
         subtitle: subtitle != null
             ? Text(
                 subtitle,
-                style: TextStyle(
-                  color: AppColors.muted.withOpacity(0.8),
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
               )
             : null,
-        trailing: trailing ?? (onTap != null ? const Icon(Icons.chevron_right, color: AppColors.muted) : null),
+        trailing:
+            trailing ??
+            (onTap != null
+                ? Icon(Icons.chevron_right, color: colors.onSurfaceVariant)
+                : null),
         onTap: onTap,
         enabled: onTap != null,
       ),
@@ -675,19 +714,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text('密匣'),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('零后端存储 · 生物识别认证 · 私有云同步'),
-            SizedBox(height: 16),
-            Text('版本: 1.0.0'),
-            Text('技术栈: Flutter'),
-            Text('加密: AES-256-GCM'),
-            SizedBox(height: 16),
+            const Text('零后端存储 · 生物识别认证 · 私有云同步'),
+            const SizedBox(height: 16),
+            const Text('版本: 1.0.0'),
+            const Text('技术栈: Flutter'),
+            const Text('加密: AES-256-GCM'),
+            const SizedBox(height: 16),
             Text(
               '密匣是零后端、零信任的跨平台密码管理方案。您的数据完全由本地端加密后存储在个人NAS或云盘中。',
-              style: TextStyle(fontSize: 12, color: AppColors.muted),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -706,9 +748,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('重置密码库'),
-        content: const Text(
-          '此操作将清除所有密码条目和设置，且不可恢复。确定要继续吗？',
-        ),
+        content: const Text('此操作将清除所有密码条目和设置，且不可恢复。确定要继续吗？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

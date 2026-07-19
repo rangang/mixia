@@ -16,21 +16,22 @@ import 'screens/password_generator_screen.dart';
 import 'theme/app_theme.dart';
 import 'models/password_entry.dart';
 import 'widgets/ios_surface.dart';
+import 'widgets/app_logo.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  
+
   FlutterError.onError = (details) {
     final exception = details.exception.toString();
-    if (exception.contains('debugSize == size') && 
+    if (exception.contains('debugSize == size') &&
         exception.contains('text_painter.dart')) {
       return;
     }
     FlutterError.presentError(details);
     debugPrint('Flutter Error: ${details.exception}');
   };
-  
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => VaultProvider(),
@@ -58,16 +59,19 @@ class MiXiaApp extends StatelessWidget {
             '/home': (context) => const HomeScreen(),
             '/add_entry': (context) => const AddEntryScreen(),
             '/entry_detail': (context) {
-              final entryId = ModalRoute.of(context)!.settings.arguments as String;
+              final entryId =
+                  ModalRoute.of(context)!.settings.arguments as String;
               return EntryDetailScreen(entryId: entryId);
             },
             '/edit_entry': (context) {
-              final entry = ModalRoute.of(context)!.settings.arguments as PasswordEntry;
+              final entry =
+                  ModalRoute.of(context)!.settings.arguments as PasswordEntry;
               return AddEntryScreen(entry: entry);
             },
             '/entries': (context) {
-              final args = ModalRoute.of(context)!.settings.arguments
-                  as Map<String, dynamic>?;
+              final args =
+                  ModalRoute.of(context)!.settings.arguments
+                      as Map<String, dynamic>?;
               return EntriesListScreen(
                 type: args?['type'] as EntryType?,
                 title: args?['title'] as String? ?? '全部条目',
@@ -102,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initialize() async {
     final provider = context.read<VaultProvider>();
-    
+
     await Future.wait([
       provider.initialize(),
       Future.delayed(const Duration(milliseconds: 800)),
@@ -136,43 +140,16 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.accent.withOpacity(0.3),
-                    width: 2,
-                  ),
-                ),
-                child: const Icon(
-                  Icons.security,
-                  size: 50,
-                  color: AppColors.accent,
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                '密匣',
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.ink,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              const Text(
+              const AppLogo(size: 96, isHero: true),
+              const SizedBox(height: 12),
+              Text(
                 '零后端 · 零信任 · 零负担',
-                style: TextStyle(
-                  color: AppColors.muted,
-                  fontSize: 14,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 40),
               const SizedBox(
                 width: 24,
                 height: 24,

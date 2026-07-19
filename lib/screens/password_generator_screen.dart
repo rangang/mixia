@@ -7,7 +7,8 @@ class PasswordGeneratorScreen extends StatefulWidget {
   const PasswordGeneratorScreen({super.key});
 
   @override
-  State<PasswordGeneratorScreen> createState() => _PasswordGeneratorScreenState();
+  State<PasswordGeneratorScreen> createState() =>
+      _PasswordGeneratorScreenState();
 }
 
 class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
@@ -41,16 +42,16 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
         includeNumbers: _includeNumbers,
         includeSymbols: _includeSymbols,
       );
-      _passwordStrength = PasswordGenerator.calculateStrength(_generatedPassword);
+      _passwordStrength = PasswordGenerator.calculateStrength(
+        _generatedPassword,
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('密码生成器'),
-      ),
+      appBar: AppBar(title: const Text('密码生成器')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -72,9 +73,9 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.rule),
+        border: Border.all(color: context.appBorder),
       ),
       child: Column(
         children: [
@@ -83,10 +84,10 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
               Expanded(
                 child: SelectableText(
                   _generatedPassword,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'JetBrainsMono',
                     fontSize: 20,
-                    color: AppColors.ink,
+                    color: context.appText,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 1,
                   ),
@@ -104,7 +105,11 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
             children: [
               _buildCopyButton('复制密码', _generatedPassword),
               const SizedBox(width: 8),
-              _buildCopyButton('复制并关闭', _generatedPassword, closeAfterCopy: true),
+              _buildCopyButton(
+                '复制并关闭',
+                _generatedPassword,
+                closeAfterCopy: true,
+              ),
             ],
           ),
         ],
@@ -112,14 +117,18 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     );
   }
 
-  Widget _buildCopyButton(String label, String text, {bool closeAfterCopy = false}) {
+  Widget _buildCopyButton(
+    String label,
+    String text, {
+    bool closeAfterCopy = false,
+  }) {
     return Expanded(
       child: OutlinedButton.icon(
         onPressed: () {
           SecureClipboard.copy(text);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('密码已复制，30 秒后自动清除')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('密码已复制，30 秒后自动清除')));
           if (closeAfterCopy) {
             Navigator.pop(context, text);
           }
@@ -137,10 +146,10 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               '密码长度',
               style: TextStyle(
-                color: AppColors.ink,
+                color: context.appText,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -150,16 +159,19 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
                 controller: _lengthController,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.bold,
+                ),
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.symmetric(vertical: 8),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppColors.rule),
+                    borderSide: BorderSide(color: context.appBorder),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppColors.rule),
+                    borderSide: BorderSide(color: context.appBorder),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -172,12 +184,15 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
           ],
         ),
         Slider(
-          value: (int.tryParse(_lengthController.text) ?? 16).toDouble().clamp(4, 64),
+          value: (int.tryParse(_lengthController.text) ?? 16).toDouble().clamp(
+            4,
+            64,
+          ),
           min: 4,
           max: 64,
           divisions: 60,
           activeColor: AppColors.accent,
-          inactiveColor: AppColors.rule,
+          inactiveColor: context.appBorder,
           onChanged: (value) {
             setState(() {
               _lengthController.text = value.round().toString();
@@ -193,12 +208,9 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '字符选项',
-          style: TextStyle(
-            color: AppColors.ink,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: context.appText, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         _buildOptionTile(
@@ -253,9 +265,9 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.rule),
+        border: Border.all(color: context.appBorder),
       ),
       child: Row(
         children: [
@@ -263,14 +275,11 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(color: AppColors.ink),
-                ),
+                Text(title, style: TextStyle(color: context.appText)),
                 Text(
                   example,
                   style: TextStyle(
-                    color: AppColors.muted.withOpacity(0.7),
+                    color: context.appMutedText,
                     fontSize: 12,
                     fontFamily: 'JetBrainsMono',
                   ),
@@ -278,11 +287,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
               ],
             ),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeColor: AppColors.accent,
-          ),
+          Switch(value: value, onChanged: onChanged),
         ],
       ),
     );
@@ -295,9 +300,9 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.rule),
+        border: Border.all(color: context.appBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,15 +310,18 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 '密码强度评估',
                 style: TextStyle(
-                  color: AppColors.ink,
+                  color: context.appText,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
@@ -335,7 +343,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: _passwordStrength,
-              backgroundColor: AppColors.rule,
+              backgroundColor: context.appBorder,
               valueColor: AlwaysStoppedAnimation<Color>(color),
               minHeight: 8,
             ),
@@ -350,19 +358,14 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   Widget _buildEntropyInfo() {
     final length = _generatedPassword.length;
     final charsetSize = _calculateCharsetSize();
-    final entropy = length * (charsetSize > 0 ? (charsetSize.bitLength - 1) : 0);
+    final entropy =
+        length * (charsetSize > 0 ? (charsetSize.bitLength - 1) : 0);
 
     return Row(
       children: [
-        Expanded(
-          child: _buildInfoItem('长度', '$length'),
-        ),
-        Expanded(
-          child: _buildInfoItem('字符集大小', '$charsetSize'),
-        ),
-        Expanded(
-          child: _buildInfoItem('熵位数', '$entropy'),
-        ),
+        Expanded(child: _buildInfoItem('长度', '$length')),
+        Expanded(child: _buildInfoItem('字符集大小', '$charsetSize')),
+        Expanded(child: _buildInfoItem('熵位数', '$entropy')),
       ],
     );
   }
@@ -380,10 +383,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
         ),
         Text(
           label,
-          style: TextStyle(
-            color: AppColors.muted,
-            fontSize: 11,
-          ),
+          style: TextStyle(color: context.appMutedText, fontSize: 11),
         ),
       ],
     );

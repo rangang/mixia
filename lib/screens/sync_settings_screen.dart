@@ -53,9 +53,7 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('同步设置'),
-      ),
+      appBar: AppBar(title: const Text('同步设置')),
       body: Consumer<VaultProvider>(
         builder: (context, provider, _) {
           if (Responsive.isDesktop(context)) {
@@ -96,9 +94,9 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
 
   Future<void> _saveConfig() async {
     if (_serverUrlController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入服务器地址')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请输入服务器地址')));
       return;
     }
 
@@ -115,26 +113,26 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
     await context.read<VaultProvider>().saveSyncConfig(config);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('同步配置已保存')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('同步配置已保存')));
     }
   }
 
   Future<void> _testConnection() async {
     final url = _serverUrlController.text.trim();
-    
+
     // URL 验证
     if (url.isEmpty) {
       _showError('请输入服务器地址');
       return;
     }
-    
+
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       _showError('服务器地址必须以 http:// 或 https:// 开头');
       return;
     }
-    
+
     try {
       final uri = Uri.parse(url);
       if (uri.host.isEmpty) {
@@ -151,7 +149,9 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
       serverUrl: _serverUrlController.text.trim(),
       username: _usernameController.text.trim(),
       password: _passwordController.text,
-      path: _pathController.text.trim().isEmpty ? '/mi_xia/' : _pathController.text.trim(),
+      path: _pathController.text.trim().isEmpty
+          ? '/mi_xia/'
+          : _pathController.text.trim(),
       autoSync: _autoSync,
       enabled: true,
     );
@@ -171,10 +171,7 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-      ),
+      SnackBar(content: Text(message), backgroundColor: AppColors.error),
     );
   }
 
@@ -184,7 +181,9 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
 
     if (mounted) {
       setState(() {
-        _syncResultMessage = result.success ? result.detail! : result.errorMessage!;
+        _syncResultMessage = result.success
+            ? result.detail!
+            : result.errorMessage!;
         _syncResultSuccess = result.success;
       });
 
@@ -203,7 +202,9 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
 
     if (mounted) {
       setState(() {
-        _syncResultMessage = result.success ? result.detail! : result.errorMessage!;
+        _syncResultMessage = result.success
+            ? result.detail!
+            : result.errorMessage!;
         _syncResultSuccess = result.success;
       });
 
@@ -220,12 +221,9 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '同步协议',
-          style: TextStyle(
-            color: AppColors.ink,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: context.appText, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         _buildProtocolCard(
@@ -237,18 +235,18 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.bg2,
+            color: context.appSurface,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.rule),
+            border: Border.all(color: context.appBorder),
           ),
           child: Row(
             children: [
-              const Icon(Icons.info_outline, color: AppColors.muted, size: 18),
+              Icon(Icons.info_outline, color: context.appMutedText, size: 18),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'WebDAV是通用云同步协议，大多数私有云存储均支持',
-                  style: TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: context.appMutedText, fontSize: 12),
                 ),
               ),
             ],
@@ -268,18 +266,11 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
       decoration: BoxDecoration(
         color: AppColors.accent.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.accent.withOpacity(0.5),
-          width: 2,
-        ),
+        border: Border.all(color: AppColors.accent.withOpacity(0.5), width: 2),
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: AppColors.accent,
-            size: 32,
-          ),
+          Icon(icon, color: AppColors.accent, size: 32),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -295,10 +286,7 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: context.appMutedText, fontSize: 12),
                 ),
               ],
             ),
@@ -313,12 +301,9 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '连接设置',
-          style: TextStyle(
-            color: AppColors.ink,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: context.appText, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         TextFormField(
@@ -347,7 +332,7 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
             suffixIcon: IconButton(
               icon: Icon(
                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: AppColors.muted,
+                color: context.appMutedText,
               ),
               onPressed: () {
                 setState(() {
@@ -374,34 +359,34 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.rule),
+        border: Border.all(color: context.appBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '同步选项',
             style: TextStyle(
-              color: AppColors.ink,
+              color: context.appText,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '自动同步',
-                      style: TextStyle(color: AppColors.ink),
-                    ),
+                    Text('自动同步', style: TextStyle(color: context.appText)),
                     Text(
                       '定期自动同步密码库',
-                      style: TextStyle(color: AppColors.muted, fontSize: 12),
+                      style: TextStyle(
+                        color: context.appMutedText,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -413,7 +398,6 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
                     _autoSync = value;
                   });
                 },
-                activeColor: AppColors.accent,
               ),
             ],
           ),
@@ -424,21 +408,21 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
 
   Widget _buildSyncStatus(VaultProvider provider) {
     final lastSync = provider.syncConfig?.lastSyncTime;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.rule),
+        border: Border.all(color: context.appBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '同步状态',
             style: TextStyle(
-              color: AppColors.ink,
+              color: context.appText,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -449,9 +433,9 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: provider.syncConfig?.enabled == true 
-                      ? AppColors.success 
-                      : AppColors.muted,
+                  color: provider.syncConfig?.enabled == true
+                      ? AppColors.success
+                      : context.appMutedText,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -459,9 +443,9 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
               Text(
                 provider.syncConfig?.enabled == true ? '已配置' : '未配置',
                 style: TextStyle(
-                  color: provider.syncConfig?.enabled == true 
-                      ? AppColors.success 
-                      : AppColors.muted,
+                  color: provider.syncConfig?.enabled == true
+                      ? AppColors.success
+                      : context.appMutedText,
                 ),
               ),
             ],
@@ -470,16 +454,13 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
             const SizedBox(height: 8),
             Text(
               '最后同步: ${_formatDateTime(lastSync)}',
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.appMutedText, fontSize: 12),
             ),
           ],
           const SizedBox(height: 8),
           Text(
             provider.syncStatusMessage ?? '',
-            style: TextStyle(
-              color: AppColors.accent,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: AppColors.accent, fontSize: 12),
           ),
         ],
       ),
@@ -487,7 +468,8 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
   }
 
   Widget _buildSyncResult() {
-    final isCertError = _syncResultMessage?.contains('证书') == true ||
+    final isCertError =
+        _syncResultMessage?.contains('证书') == true ||
         _syncResultMessage?.contains('CERT') == true ||
         _syncResultMessage?.contains('certificate') == true ||
         _syncResultMessage?.contains('SSL') == true ||
@@ -501,12 +483,12 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _syncResultSuccess 
+        color: _syncResultSuccess
             ? AppColors.success.withOpacity(0.1)
             : AppColors.error.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _syncResultSuccess 
+          color: _syncResultSuccess
               ? AppColors.success.withOpacity(0.3)
               : AppColors.error.withOpacity(0.3),
         ),
@@ -514,7 +496,9 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
       child: Row(
         children: [
           Icon(
-            _syncResultSuccess ? Icons.check_circle_outline : Icons.error_outline,
+            _syncResultSuccess
+                ? Icons.check_circle_outline
+                : Icons.error_outline,
             color: _syncResultSuccess ? AppColors.success : AppColors.error,
             size: 20,
           ),
@@ -539,20 +523,14 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
       decoration: BoxDecoration(
         color: AppColors.warning.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.warning.withOpacity(0.3),
-        ),
+        border: Border.all(color: AppColors.warning.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.security,
-                color: AppColors.warning,
-                size: 20,
-              ),
+              Icon(Icons.security, color: AppColors.warning, size: 20),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
@@ -567,10 +545,10 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             '您连接的 WebDAV 服务器使用了自签名证书，浏览器默认不信任此类证书。',
             style: TextStyle(
-              color: AppColors.muted,
+              color: context.appMutedText,
               fontSize: 13,
               height: 1.4,
             ),
@@ -579,20 +557,30 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.bg3,
+              color: context.appElevatedSurface,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.rule),
+              border: Border.all(color: context.appBorder),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '🔧 解决步骤：',
-                  style: TextStyle(
-                    color: AppColors.ink,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.build_outlined,
+                      color: AppColors.accent,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '解决步骤',
+                      style: TextStyle(
+                        color: context.appText,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 _buildSolutionStep('1', '点击下方"打开服务器地址"按钮'),
@@ -649,8 +637,8 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: context.appMutedText,
                 fontSize: 12,
                 height: 1.3,
               ),
@@ -672,9 +660,9 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
       // 使用 JavaScript 打开新窗口
       _openInNewTab(openUrl);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先输入服务器地址')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请先输入服务器地址')));
     }
   }
 
@@ -693,7 +681,7 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
 
   Widget _buildActionButtons(VaultProvider provider) {
     final isSyncing = provider.isSyncing;
-    
+
     return Column(
       children: [
         SizedBox(
@@ -798,12 +786,19 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
+                    Icon(
+                      Icons.warning_amber,
+                      color: AppColors.warning,
+                      size: 20,
+                    ),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         '注意：部分服务器需要配置 CORS 才能从 Web 浏览器访问',
-                        style: TextStyle(color: AppColors.warning, fontSize: 12),
+                        style: TextStyle(
+                          color: AppColors.warning,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],
@@ -823,13 +818,14 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
   }
 
   Widget _buildHelpSection(String title, String content) {
+    final colors = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
-            color: AppColors.ink,
+          style: TextStyle(
+            color: colors.onSurface,
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
@@ -837,8 +833,8 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
         const SizedBox(height: 4),
         Text(
           content,
-          style: const TextStyle(
-            color: AppColors.muted,
+          style: TextStyle(
+            color: colors.onSurfaceVariant,
             fontSize: 13,
             height: 1.4,
           ),

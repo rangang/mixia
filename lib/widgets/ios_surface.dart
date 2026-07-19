@@ -12,22 +12,71 @@ class IosBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background =
-        isDark ? AppColors.bg : AppColors.lightBg;
+    final background = isDark ? AppColors.bg : AppColors.lightBg;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: background,
-        gradient: RadialGradient(
-          center: const Alignment(0.75, -1),
-          radius: 1.25,
-          colors: [
-            AppColors.accent.withOpacity(isDark ? 0.18 : 0.10),
-            background.withOpacity(0),
-          ],
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: background,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? const [
+                      Color(0xFF08111F),
+                      Color(0xFF0B1424),
+                      Color(0xFF0A1020),
+                    ]
+                  : const [
+                      Color(0xFFF8FBFD),
+                      Color(0xFFF1F7F7),
+                      Color(0xFFF5F4FA),
+                    ],
+            ),
+          ),
         ),
-      ),
-      child: child,
+        Positioned(
+          top: -180,
+          right: -120,
+          child: IgnorePointer(
+            child: Container(
+              width: 440,
+              height: 440,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.accent.withOpacity(isDark ? 0.16 : 0.12),
+                    AppColors.accent.withOpacity(0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          left: -180,
+          bottom: -220,
+          child: IgnorePointer(
+            child: Container(
+              width: 480,
+              height: 480,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.accent3.withOpacity(isDark ? 0.10 : 0.07),
+                    AppColors.accent3.withOpacity(0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        child,
+      ],
     );
   }
 }
@@ -51,6 +100,7 @@ class GlassSurface extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ink = Theme.of(context).colorScheme.onSurface;
 
+    final surfaceColor = isDark ? AppColors.bg2 : AppColors.lightSurface;
     final surface = ClipRRect(
       borderRadius: borderRadius,
       child: BackdropFilter(
@@ -58,15 +108,14 @@ class GlassSurface extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.white)
-                .withOpacity(isDark ? 0.10 : 0.58),
+            color: surfaceColor.withOpacity(isDark ? 0.82 : 0.88),
             borderRadius: borderRadius,
             border: Border.all(color: ink.withOpacity(isDark ? 0.14 : 0.10)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.18 : 0.06),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
+                color: Colors.black.withOpacity(isDark ? 0.16 : 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
           ),

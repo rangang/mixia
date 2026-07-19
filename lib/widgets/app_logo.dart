@@ -15,6 +15,11 @@ class AppLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final base = isDark ? AppColors.bg2 : AppColors.lightSurface;
+    final lower = isDark ? AppColors.bg : AppColors.lightElevated;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -25,10 +30,7 @@ class AppLogo extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                AppColors.bg2,
-                AppColors.bg,
-              ],
+              colors: [base, lower],
             ),
             shape: BoxShape.circle,
             boxShadow: isHero
@@ -58,7 +60,7 @@ class AppLogo extends StatelessWidget {
               painter: _LockBoxPainter(
                 color: AppColors.accent,
                 goldColor: AppColors.accent2,
-                darkColor: AppColors.bg3,
+                darkColor: isDark ? AppColors.bg3 : AppColors.lightRule,
               ),
             ),
           ),
@@ -68,8 +70,8 @@ class AppLogo extends StatelessWidget {
           ShaderMask(
             shaderCallback: (bounds) => LinearGradient(
               colors: [
-                AppColors.ink,
-                AppColors.ink.withOpacity(0.85),
+                colorScheme.onSurface,
+                colorScheme.onSurface.withOpacity(0.78),
               ],
             ).createShader(bounds),
             child: Text(
@@ -86,7 +88,7 @@ class AppLogo extends StatelessWidget {
           Text(
             'MiXia',
             style: TextStyle(
-              color: AppColors.muted,
+              color: colorScheme.onSurfaceVariant,
               fontSize: size / 8,
               fontWeight: FontWeight.w500,
               letterSpacing: size / 40,
@@ -117,10 +119,12 @@ class _LockBoxPainter extends CustomPainter {
     final paint = Paint()..style = PaintingStyle.fill;
 
     final shadowPath = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(2, h * 0.30, w, h * 0.54),
-        Radius.circular(w * 0.10),
-      ));
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(2, h * 0.30, w, h * 0.54),
+          Radius.circular(w * 0.10),
+        ),
+      );
     paint.color = Colors.black.withOpacity(0.3);
     canvas.drawPath(shadowPath, paint);
 
@@ -132,11 +136,13 @@ class _LockBoxPainter extends CustomPainter {
     canvas.drawRRect(boxRect, paint);
 
     final boxHighlightPath = Path()
-      ..addRRect(RRect.fromRectAndCorners(
-        Rect.fromLTWH(3, h * 0.28 + 3, w - 6, h * 0.20),
-        topLeft: Radius.circular(w * 0.09),
-        topRight: Radius.circular(w * 0.09),
-      ));
+      ..addRRect(
+        RRect.fromRectAndCorners(
+          Rect.fromLTWH(3, h * 0.28 + 3, w - 6, h * 0.20),
+          topLeft: Radius.circular(w * 0.09),
+          topRight: Radius.circular(w * 0.09),
+        ),
+      );
     paint.color = color.withOpacity(0.5);
     canvas.drawPath(boxHighlightPath, paint);
 
@@ -210,7 +216,12 @@ class _LockBoxPainter extends CustomPainter {
 
     paint.color = Colors.white.withOpacity(0.25);
     final lockHighlight = RRect.fromRectAndRadius(
-      Rect.fromLTWH(lockX + 3, lockY + lockH * 0.15 + 3, lockW - 6, lockH * 0.18),
+      Rect.fromLTWH(
+        lockX + 3,
+        lockY + lockH * 0.15 + 3,
+        lockW - 6,
+        lockH * 0.18,
+      ),
       Radius.circular(w * 0.04),
     );
     canvas.drawRRect(lockHighlight, paint);

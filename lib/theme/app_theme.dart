@@ -3,25 +3,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppColors {
-  static const Color bg = Color(0xFF000000);
-  static const Color bg2 = Color(0xFF1C1C1E);
-  static const Color bg3 = Color(0xFF2C2C2E);
-  static const Color ink = Color(0xFFF5F5F7);
-  static const Color muted = Color(0xFF98989D);
-  static const Color rule = Color(0xFF38383A);
-  static const Color accent = Color(0xFF0A84FF);
-  static const Color accent2 = Color(0xFFFF9F0A);
-  static const Color accent3 = Color(0xFFBF5AF2);
+  static const Color bg = Color(0xFF0B1220);
+  static const Color bg2 = Color(0xFF111C2F);
+  static const Color bg3 = Color(0xFF18263D);
+  static const Color ink = Color(0xFFF8FAFC);
+  static const Color muted = Color(0xFFA7B3C5);
+  static const Color rule = Color(0xFF2B3A52);
+  static const Color accent = Color(0xFF2DD4BF);
+  static const Color onAccent = Color(0xFF042F2E);
+  static const Color accent2 = Color(0xFFF59E0B);
+  static const Color accent3 = Color(0xFF818CF8);
   static const Color error = Color(0xFFFF453A);
   static const Color success = Color(0xFF30D158);
   static const Color warning = Color(0xFFFF9F0A);
 
-  static const Color lightBg = Color(0xFFF2F2F7);
+  static const Color lightBg = Color(0xFFF4F7FA);
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightElevated = Color(0xFFF7F7FA);
-  static const Color lightInk = Color(0xFF1C1C1E);
-  static const Color lightMuted = Color(0xFF6C6C70);
-  static const Color lightRule = Color(0xFFD1D1D6);
+  static const Color lightElevated = Color(0xFFF0F4F8);
+  static const Color lightInk = Color(0xFF162033);
+  static const Color lightMuted = Color(0xFF5E6B7E);
+  static const Color lightRule = Color(0xFFD8E0EA);
+}
+
+extension AppThemeColors on BuildContext {
+  Color get appSurface => Theme.of(this).colorScheme.surface;
+  Color get appElevatedSurface =>
+      Theme.of(this).colorScheme.surfaceContainerHighest;
+  Color get appText => Theme.of(this).colorScheme.onSurface;
+  Color get appMutedText => Theme.of(this).colorScheme.onSurfaceVariant;
+  Color get appBorder => Theme.of(this).colorScheme.outlineVariant;
 }
 
 class AppTheme {
@@ -51,17 +61,29 @@ class AppTheme {
     final colorScheme = ColorScheme(
       brightness: brightness,
       primary: AppColors.accent,
-      onPrimary: Colors.white,
+      onPrimary: AppColors.onAccent,
       secondary: AppColors.accent3,
-      onSecondary: Colors.white,
+      onSecondary: const Color(0xFF111827),
       error: AppColors.error,
-      onError: Colors.white,
+      onError: const Color(0xFF3A0906),
       surface: surface,
+      surfaceContainerHighest: elevated,
       onSurface: ink,
+      onSurfaceVariant: muted,
+      outline: rule,
+      outlineVariant: rule.withValues(alpha: 0.7),
     );
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'BricolageGrotesque',
+      fontFamilyFallback: const [
+        'MiXia CJK',
+        'Microsoft YaHei',
+        'PingFang SC',
+        'Noto Sans CJK SC',
+        'sans-serif',
+      ],
       brightness: brightness,
       colorScheme: colorScheme,
       cupertinoOverrideTheme: CupertinoThemeData(
@@ -88,11 +110,12 @@ class AppTheme {
       scaffoldBackgroundColor: background,
       canvasColor: background,
       primaryColor: AppColors.accent,
-      splashFactory: NoSplash.splashFactory,
-      highlightColor: Colors.transparent,
+      splashFactory: InkRipple.splashFactory,
+      focusColor: AppColors.accent.withOpacity(0.18),
       hoverColor: ink.withOpacity(0.04),
       pageTransitionsTheme: _pageTransitions,
       visualDensity: VisualDensity.standard,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
       appBarTheme: AppBarTheme(
         backgroundColor: background.withOpacity(0.92),
         foregroundColor: ink,
@@ -102,13 +125,12 @@ class AppTheme {
         centerTitle: true,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness:
-              isDark ? Brightness.light : Brightness.dark,
-          statusBarBrightness:
-              isDark ? Brightness.dark : Brightness.light,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
           systemNavigationBarColor: background,
-          systemNavigationBarIconBrightness:
-              isDark ? Brightness.light : Brightness.dark,
+          systemNavigationBarIconBrightness: isDark
+              ? Brightness.light
+              : Brightness.dark,
         ),
         titleTextStyle: TextStyle(
           color: ink,
@@ -117,7 +139,10 @@ class AppTheme {
           letterSpacing: -0.2,
         ),
         iconTheme: const IconThemeData(color: AppColors.accent, size: 22),
-        actionsIconTheme: const IconThemeData(color: AppColors.accent, size: 22),
+        actionsIconTheme: const IconThemeData(
+          color: AppColors.accent,
+          size: 22,
+        ),
       ),
       cardTheme: CardThemeData(
         color: surface,
@@ -125,14 +150,17 @@ class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           side: BorderSide(color: rule.withOpacity(0.7)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: elevated,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 15,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -161,9 +189,9 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.accent,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.onAccent,
           disabledBackgroundColor: AppColors.accent.withOpacity(0.35),
-          disabledForegroundColor: Colors.white.withOpacity(0.7),
+          disabledForegroundColor: AppColors.onAccent.withOpacity(0.55),
           elevation: 0,
           minimumSize: const Size(44, 50),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
@@ -177,7 +205,9 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: AppColors.accent,
           minimumSize: const Size(44, 44),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -194,9 +224,10 @@ class AppTheme {
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.accent.withOpacity(0.9),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        shape: const CircleBorder(),
+        foregroundColor: AppColors.onAccent,
+        elevation: 2,
+        focusElevation: 3,
+        hoverElevation: 3,
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: surface,
@@ -215,6 +246,7 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actionTextColor: AppColors.accent,
       ),
       dividerTheme: DividerThemeData(
         color: rule.withOpacity(0.7),
@@ -222,17 +254,33 @@ class AppTheme {
         space: 1,
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected)
-              ? Colors.white
-              : const Color(0xFFE5E5EA),
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return muted.withOpacity(0.55);
+          }
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return isDark ? const Color(0xFFCBD5E1) : Colors.white;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return elevated;
+          }
+          if (states.contains(WidgetState.selected)) {
+            return isDark ? const Color(0xFF14B8A6) : const Color(0xFF0F766E);
+          }
+          return isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1);
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.transparent;
+          }
+          return rule;
+        }),
+        overlayColor: WidgetStatePropertyAll(
+          AppColors.accent.withOpacity(0.12),
         ),
-        trackColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected)
-              ? AppColors.success
-              : rule,
-        ),
-        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
       ),
       listTileTheme: ListTileThemeData(
         tileColor: Colors.transparent,
@@ -247,6 +295,15 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 8,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          minimumSize: const Size(44, 44),
+          foregroundColor: muted,
+          focusColor: AppColors.accent.withOpacity(0.18),
+          hoverColor: AppColors.accent.withOpacity(0.08),
+          highlightColor: AppColors.accent.withOpacity(0.12),
+        ),
       ),
       textTheme: TextTheme(
         displayLarge: TextStyle(color: ink, fontWeight: FontWeight.w700),
@@ -266,9 +323,9 @@ class AppTheme {
         titleLarge: TextStyle(color: ink, fontWeight: FontWeight.w600),
         titleMedium: TextStyle(color: ink, fontWeight: FontWeight.w600),
         titleSmall: TextStyle(color: ink, fontWeight: FontWeight.w600),
-        bodyLarge: TextStyle(color: ink),
-        bodyMedium: TextStyle(color: ink),
-        bodySmall: TextStyle(color: muted),
+        bodyLarge: TextStyle(color: ink, height: 1.5),
+        bodyMedium: TextStyle(color: ink, height: 1.5),
+        bodySmall: TextStyle(color: muted, height: 1.45),
         labelLarge: TextStyle(color: ink, fontWeight: FontWeight.w600),
         labelMedium: TextStyle(color: muted),
         labelSmall: TextStyle(color: muted),

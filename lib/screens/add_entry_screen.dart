@@ -25,6 +25,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 
   late EntryType _selectedType;
   bool _isEditing = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -90,8 +91,14 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
         title: Text(_isEditing ? '编辑条目' : '添加条目'),
         actions: [
           TextButton(
-            onPressed: _saveEntry,
-            child: const Text('保存'),
+            onPressed: _isSaving ? null : _saveEntry,
+            child: _isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('保存'),
           ),
         ],
       ),
@@ -154,8 +161,21 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: _saveEntry,
-          child: Text(_isEditing ? '更新' : '保存'),
+          onPressed: _isSaving ? null : _saveEntry,
+          child: _isSaving
+              ? const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    SizedBox(width: 10),
+                    Text('保存中...'),
+                  ],
+                )
+              : Text(_isEditing ? '更新' : '保存'),
         ),
       ),
     );
@@ -213,7 +233,8 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 
     final isSensitive = field.isSensitive;
     final isMultiline = field.fieldType == EntryFieldType.multiline;
-    final isObscure = isSensitive && !isMultiline && (_obscureFields[field.key] ?? true);
+    final isObscure =
+        isSensitive && !isMultiline && (_obscureFields[field.key] ?? true);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,7 +247,9 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           inputFormatters: _getInputFormatters(field.fieldType),
           decoration: InputDecoration(
             labelText: field.required ? '${field.label} *' : field.label,
-            hintText: isMultiline && isSensitive ? '${field.hint}（敏感信息，请注意保存）' : field.hint,
+            hintText: isMultiline && isSensitive
+                ? '${field.hint}（敏感信息，请注意保存）'
+                : field.hint,
             prefixIcon: Icon(field.icon),
             suffixIcon: isSensitive && !isMultiline
                 ? Row(
@@ -235,7 +258,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                       IconButton(
                         icon: Icon(
                           isObscure ? Icons.visibility_off : Icons.visibility,
-                          color: AppColors.muted,
+                          color: context.appMutedText,
                         ),
                         onPressed: () {
                           setState(() {
@@ -245,10 +268,15 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                       ),
                       if (field.fieldType == EntryFieldType.password)
                         IconButton(
-                          icon: const Icon(Icons.casino, color: AppColors.accent),
+                          icon: const Icon(
+                            Icons.casino,
+                            color: AppColors.accent,
+                          ),
                           tooltip: '生成密码',
                           onPressed: () {
-                            final password = PasswordGenerator.generate(length: 16);
+                            final password = PasswordGenerator.generate(
+                              length: 16,
+                            );
                             controller.text = password;
                             setState(() {});
                           },
@@ -256,14 +284,18 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                     ],
                   )
                 : isMultiline && isSensitive
-                    ? const Tooltip(
-                        message: '此为敏感信息',
-                        child: Padding(
-                          padding: EdgeInsets.all(12),
-                          child: Icon(Icons.security, color: AppColors.warning, size: 20),
-                        ),
-                      )
-                    : null,
+                ? const Tooltip(
+                    message: '此为敏感信息',
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Icon(
+                        Icons.security,
+                        color: AppColors.warning,
+                        size: 20,
+                      ),
+                    ),
+                  )
+                : null,
             alignLabelWithHint: isMultiline,
           ),
           validator: field.required
@@ -332,33 +364,47 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   }
 
   Future<void> _saveEntry() async {
+    if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
 
     final provider = context.read<VaultProvider>();
     final fields = EntryTypes.getFields(_selectedType);
+    setState(() => _isSaving = true);
+    // Give Flutter and the browser a full paint opportunity before the
+    // synchronous encryption work starts.
+    await Future<void>.delayed(const Duration(milliseconds: 100));
 
-    if (_isEditing) {
-      final updated = widget.entry!;
-      for (final field in fields) {
-        final value = _controllers[field.key]?.text ?? '';
-        updated.setField(field.key, value);
-      }
-      updated.updatedAt = DateTime.now();
-      await provider.updateEntry(updated);
-    } else {
-      final newEntry = PasswordEntry(
-        type: _selectedType,
-        title: _controllers['title']?.text ?? '',
-      );
-      for (final field in fields) {
-        final value = _controllers[field.key]?.text ?? '';
-        newEntry.setField(field.key, value);
-      }
-      await provider.addEntry(newEntry);
-    }
+    var saved = false;
 
-    if (mounted) {
-      Navigator.pop(context, true);
+    try {
+      if (_isEditing) {
+        final updated = widget.entry!;
+        for (final field in fields) {
+          final value = _controllers[field.key]?.text ?? '';
+          updated.setField(field.key, value);
+        }
+        updated.updatedAt = DateTime.now();
+        await provider.updateEntry(updated);
+      } else {
+        final newEntry = PasswordEntry(
+          type: _selectedType,
+          title: _controllers['title']?.text ?? '',
+        );
+        for (final field in fields) {
+          final value = _controllers[field.key]?.text ?? '';
+          newEntry.setField(field.key, value);
+        }
+        await provider.addEntry(newEntry);
+      }
+
+      saved = true;
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
+    } finally {
+      if (mounted && !saved) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -367,12 +413,9 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '条目类型',
-          style: TextStyle(
-            color: AppColors.muted,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: context.appMutedText, fontSize: 14),
         ),
         const SizedBox(height: 8),
         LayoutBuilder(
@@ -405,10 +448,10 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? config.color.withOpacity(0.15)
-              : AppColors.bg3,
+              : context.appElevatedSurface,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? config.color : AppColors.rule,
+            color: isSelected ? config.color : context.appBorder,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -417,14 +460,14 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           children: [
             Icon(
               config.icon,
-              color: isSelected ? config.color : AppColors.muted,
+              color: isSelected ? config.color : context.appMutedText,
               size: 24,
             ),
             const SizedBox(height: 6),
             Text(
               config.label,
               style: TextStyle(
-                color: isSelected ? config.color : AppColors.muted,
+                color: isSelected ? config.color : context.appMutedText,
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -452,13 +495,17 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               '密码强度',
-              style: TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: context.appMutedText, fontSize: 12),
             ),
             Text(
               label,
-              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -467,7 +514,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: strength,
-            backgroundColor: AppColors.rule,
+            backgroundColor: context.appBorder,
             valueColor: AlwaysStoppedAnimation<Color>(color),
             minHeight: 4,
           ),
@@ -488,7 +535,9 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 class _CardNumberFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     var text = newValue.text.replaceAll(' ', '');
     if (text.length > 16) text = text.substring(0, 16);
     final buffer = StringBuffer();

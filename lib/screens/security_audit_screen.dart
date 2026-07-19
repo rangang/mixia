@@ -56,7 +56,8 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
                   title: '重复密码',
                   icon: Icons.content_copy,
                   color: AppColors.warning,
-                  entries: auditResult['duplicatePasswords'] as List<PasswordEntry>,
+                  entries:
+                      auditResult['duplicatePasswords'] as List<PasswordEntry>,
                   description: '多个账户使用相同密码，存在安全风险',
                 ),
                 const SizedBox(height: 16),
@@ -97,7 +98,9 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
 
         passwordMap.putIfAbsent(entry.password, () => []).add(entry);
 
-        final daysSinceUpdate = DateTime.now().difference(entry.updatedAt).inDays;
+        final daysSinceUpdate = DateTime.now()
+            .difference(entry.updatedAt)
+            .inDays;
         if (daysSinceUpdate > 90) {
           oldPasswords.add(entry);
         }
@@ -110,7 +113,8 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
       }
     }
 
-    final totalIssues = weakPasswords.length + duplicatePasswords.length + oldPasswords.length;
+    final totalIssues =
+        weakPasswords.length + duplicatePasswords.length + oldPasswords.length;
 
     int score = 100;
     score -= weakPasswords.length * 10;
@@ -150,9 +154,9 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.rule),
+        border: Border.all(color: context.appBorder),
       ),
       child: Column(
         children: [
@@ -169,7 +173,7 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
                       child: CircularProgressIndicator(
                         value: score / 100,
                         strokeWidth: 8,
-                        backgroundColor: AppColors.rule,
+                        backgroundColor: context.appBorder,
                         valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
                       ),
                     ),
@@ -191,10 +195,10 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '安全评分',
                       style: TextStyle(
-                        color: AppColors.muted,
+                        color: context.appMutedText,
                         fontSize: 14,
                       ),
                     ),
@@ -210,8 +214,8 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
                     const SizedBox(height: 4),
                     Text(
                       '共审计 ${auditResult['totalEntries']} 个条目',
-                      style: const TextStyle(
-                        color: AppColors.muted,
+                      style: TextStyle(
+                        color: context.appMutedText,
                         fontSize: 12,
                       ),
                     ),
@@ -263,9 +267,9 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.rule),
+        border: Border.all(color: context.appBorder),
       ),
       child: Column(
         children: [
@@ -280,10 +284,7 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.muted,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: context.appMutedText, fontSize: 12),
           ),
         ],
       ),
@@ -299,9 +300,9 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.rule),
+        border: Border.all(color: context.appBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,8 +333,8 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
                       ),
                       Text(
                         description,
-                        style: const TextStyle(
-                          color: AppColors.muted,
+                        style: TextStyle(
+                          color: context.appMutedText,
                           fontSize: 12,
                         ),
                       ),
@@ -341,47 +342,63 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     '${entries.length}',
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(color: color, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: AppColors.rule),
-          ...entries.take(3).map((entry) => ListTile(
-                dense: true,
-                leading: const Icon(Icons.lock_outline, size: 18, color: AppColors.muted),
-                title: Text(
-                  entry.title,
-                  style: const TextStyle(color: AppColors.ink, fontSize: 14),
+          Divider(height: 1, color: context.appBorder),
+          ...entries
+              .take(3)
+              .map(
+                (entry) => ListTile(
+                  dense: true,
+                  leading: Icon(
+                    Icons.lock_outline,
+                    size: 18,
+                    color: context.appMutedText,
+                  ),
+                  title: Text(
+                    entry.title,
+                    style: TextStyle(color: context.appText, fontSize: 14),
+                  ),
+                  subtitle: Text(
+                    entry.username.isNotEmpty ? entry.username : '无用户名',
+                    style: TextStyle(color: context.appMutedText, fontSize: 12),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(
+                      Icons.edit,
+                      size: 18,
+                      color: AppColors.accent,
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/edit_entry',
+                        arguments: entry,
+                      );
+                    },
+                  ),
                 ),
-                subtitle: Text(
-                  entry.username.isNotEmpty ? entry.username : '无用户名',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.edit, size: 18, color: AppColors.accent),
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/edit_entry', arguments: entry);
-                  },
-                ),
-              )),
+              ),
           if (entries.length > 3)
             Padding(
               padding: const EdgeInsets.all(8),
               child: Text(
                 '还有 ${entries.length - 3} 个条目...',
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: context.appMutedText, fontSize: 12),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -406,10 +423,10 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
             color: AppColors.success,
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             '太棒了！',
             style: TextStyle(
-              color: AppColors.ink,
+              color: context.appText,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -417,10 +434,7 @@ class _SecurityAuditScreenState extends State<SecurityAuditScreen> {
           const SizedBox(height: 8),
           Text(
             '您的密码库目前没有发现安全问题',
-            style: TextStyle(
-              color: AppColors.muted,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: context.appMutedText, fontSize: 14),
             textAlign: TextAlign.center,
           ),
         ],

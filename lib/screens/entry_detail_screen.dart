@@ -121,13 +121,19 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
               children: [
                 Expanded(
                   child: Column(
-                    children: _buildFieldsWidgets(entry, fieldConfigs.sublist(0, halfLength)),
+                    children: _buildFieldsWidgets(
+                      entry,
+                      fieldConfigs.sublist(0, halfLength),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
-                    children: _buildFieldsWidgets(entry, fieldConfigs.sublist(halfLength)),
+                    children: _buildFieldsWidgets(
+                      entry,
+                      fieldConfigs.sublist(halfLength),
+                    ),
                   ),
                 ),
               ],
@@ -146,7 +152,10 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
     return _buildFieldsWidgets(entry, entry.fieldConfigs);
   }
 
-  List<Widget> _buildFieldsWidgets(PasswordEntry entry, List<EntryFieldConfig> fields) {
+  List<Widget> _buildFieldsWidgets(
+    PasswordEntry entry,
+    List<EntryFieldConfig> fields,
+  ) {
     final widgets = <Widget>[];
     for (var i = 0; i < fields.length; i++) {
       final field = fields[i];
@@ -165,9 +174,9 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.rule),
+        border: Border.all(color: context.appBorder),
       ),
       child: Row(
         children: [
@@ -187,15 +196,18 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
               children: [
                 Text(
                   entry.title,
-                  style: const TextStyle(
-                    color: AppColors.ink,
+                  style: TextStyle(
+                    color: context.appText,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: entry.typeColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(4),
@@ -213,10 +225,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
                   const SizedBox(height: 6),
                   Text(
                     entry.displaySubtitle,
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: context.appMutedText, fontSize: 13),
                   ),
                 ],
               ],
@@ -227,7 +236,12 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
     );
   }
 
-  Widget _buildFieldWidget(BuildContext context, PasswordEntry entry, EntryFieldConfig field, String value) {
+  Widget _buildFieldWidget(
+    BuildContext context,
+    PasswordEntry entry,
+    EntryFieldConfig field,
+    String value,
+  ) {
     if (value.isEmpty) return const SizedBox.shrink();
 
     final isSensitive = field.isSensitive;
@@ -239,21 +253,21 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.rule),
+        border: Border.all(color: context.appBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(field.icon, size: 16, color: AppColors.muted),
+              Icon(field.icon, size: 16, color: context.appMutedText),
               const SizedBox(width: 8),
               Text(
                 field.label,
-                style: const TextStyle(
-                  color: AppColors.muted,
+                style: TextStyle(
+                  color: context.appMutedText,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -275,7 +289,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
                     child: Icon(
                       isRevealed ? Icons.visibility_off : Icons.visibility,
                       size: 16,
-                      color: AppColors.muted,
+                      color: context.appMutedText,
                     ),
                   ),
                 ),
@@ -303,7 +317,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
             displayValue,
             style: TextStyle(
               fontFamily: isSensitive ? 'JetBrainsMono' : null,
-              color: isLink ? AppColors.accent : AppColors.ink,
+              color: isLink ? AppColors.accent : context.appText,
               fontSize: 15,
               height: isMultiline ? 1.5 : 1.0,
               letterSpacing: isSensitive && !isRevealed ? 2 : 0,
@@ -318,17 +332,17 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.rule),
+        border: Border.all(color: context.appBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '元数据',
             style: TextStyle(
-              color: AppColors.muted,
+              color: context.appMutedText,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -353,19 +367,13 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
           width: 80,
           child: Text(
             label,
-            style: const TextStyle(
-              color: AppColors.muted,
-              fontSize: 13,
-            ),
+            style: TextStyle(color: context.appMutedText, fontSize: 13),
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              color: AppColors.ink,
-              fontSize: 13,
-            ),
+            style: TextStyle(color: context.appText, fontSize: 13),
           ),
         ),
       ],
@@ -392,7 +400,8 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
                   label: Text('复制${_getPrimaryCopyField(entry)!.label}'),
                 ),
               ),
-            if (_getPrimaryCopyField(entry) != null && _hasSensitiveField(entry))
+            if (_getPrimaryCopyField(entry) != null &&
+                _hasSensitiveField(entry))
               const SizedBox(width: 12),
             if (_hasSensitiveField(entry))
               Expanded(
@@ -424,7 +433,10 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
     }
     final username = entry.getField('username');
     if (username.isNotEmpty) {
-      return entry.fieldConfigs.firstWhere((f) => f.key == 'username', orElse: () => entry.fieldConfigs.first);
+      return entry.fieldConfigs.firstWhere(
+        (f) => f.key == 'username',
+        orElse: () => entry.fieldConfigs.first,
+      );
     }
     return null;
   }
@@ -443,7 +455,11 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
     return _getSensitiveField(entry) != null;
   }
 
-  void _handleMenuAction(BuildContext context, String action, PasswordEntry entry) {
+  void _handleMenuAction(
+    BuildContext context,
+    String action,
+    PasswordEntry entry,
+  ) {
     if (action == 'delete') {
       _showDeleteConfirmation(context, entry);
     } else if (action == 'copy_all') {
@@ -457,9 +473,9 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
         }
       }
       SecureClipboard.copy(buffer.toString());
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('条目信息已复制到剪贴板')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('条目信息已复制到剪贴板')));
     }
   }
 
