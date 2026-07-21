@@ -118,13 +118,17 @@ jobs:
       - run: flutter build windows --release
       
       - name: Package Windows
-        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath "$env:GITHUB_WORKSPACE\密匣_Windows.zip"
+        run: |
+          Set-Location -LiteralPath "build\windows\x64\runner\Release"
+          Get-ChildItem | Format-Table Name
+          Compress-Archive -Path .\* -DestinationPath "$env:GITHUB_WORKSPACE\mixia-windows.zip" -Force
+          Test-Path "$env:GITHUB_WORKSPACE\mixia-windows.zip"
         shell: powershell
       
       - uses: actions/upload-artifact@v4
         with:
           name: windows-package
-          path: 密匣_Windows.zip
+          path: mixia-windows.zip
 
   build-macos:
     name: Build macOS
@@ -144,12 +148,12 @@ jobs:
       - name: Package macOS
         run: |
           cd build/macos/Build/Products/Release
-          zip -r "$GITHUB_WORKSPACE/密匣_macOS.zip" 密匣.app
+          zip -r "$GITHUB_WORKSPACE/mixia-macos.zip" 密匣.app
       
       - uses: actions/upload-artifact@v4
         with:
           name: macos-package
-          path: 密匣_macOS.zip
+          path: mixia-macos.zip
 
   build-linux:
     name: Build Linux
@@ -253,6 +257,6 @@ jobs:
             packages/web-github-package/密匣_Web_GitHubPages.zip
             packages/web-vercel-package/密匣_Web_Vercel.zip
             packages/android-package/密匣_Android.apk
-            packages/windows-package/密匣_Windows.zip
-            packages/macos-package/密匣_macOS.zip
+            packages/windows-package/mixia-windows.zip
+            packages/macos-package/mixia-macos.zip
             packages/linux-package/密匣_Linux.tar.gz
