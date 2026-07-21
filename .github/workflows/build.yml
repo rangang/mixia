@@ -118,7 +118,7 @@ jobs:
       - run: flutter build windows --release
       
       - name: Package Windows
-        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath 密匣_Windows.zip
+        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath "$env:GITHUB_WORKSPACE\密匣_Windows.zip"
         shell: powershell
       
       - uses: actions/upload-artifact@v4
@@ -144,7 +144,7 @@ jobs:
       - name: Package macOS
         run: |
           cd build/macos/Build/Products/Release
-          zip -r ../../../../密匣_macOS.zip 密匣.app
+          zip -r "$GITHUB_WORKSPACE/密匣_macOS.zip" 密匣.app
       
       - uses: actions/upload-artifact@v4
         with:
